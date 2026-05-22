@@ -2,17 +2,22 @@
 
 namespace App\Models;
 
+use App\Enums\UserStatus;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable;
+    use HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -23,6 +28,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'status',
+        'last_login_at',
     ];
 
     /**
@@ -44,7 +51,25 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
             'password' => 'hashed',
+            'status' => UserStatus::class,
         ];
+    }
+
+    public function mentorProfile(): HasOne
+    {
+        return $this->hasOne(MentorProfile::class);
+    }
+
+    public function wallet(): HasOne
+    {
+        return $this->hasOne(Wallet::class, 'owner_id')->where('owner_type', 'user');
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->status === UserStatus::Active
+            && ($this->hasRole('admin') || $this->can('access_admin_panel'));
     }
 }

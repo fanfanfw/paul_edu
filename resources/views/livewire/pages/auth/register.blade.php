@@ -1,9 +1,14 @@
 <?php
 
 use App\Models\User;
+use App\Models\Wallet;
+use App\Models\MentorProfile;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -12,6 +17,7 @@ new #[Layout('layouts.guest')] class extends Component
 {
     public string $name = '';
     public string $email = '';
+    public string $role = 'user';
     public string $password = '';
     public string $password_confirmation = '';
 
@@ -23,16 +29,60 @@ new #[Layout('layouts.guest')] class extends Component
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'role' => ['required', Rule::in(['user', 'mentor'])],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
+        $role = $validated['role'];
 
-        event(new Registered($user = User::create($validated)));
+        $user = DB::transaction(function () use ($validated, $role) {
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+            ]);
+
+            $user->assignRole($role);
+
+            Wallet::create([
+                'owner_type' => 'user',
+                'owner_id' => $user->id,
+                'balance' => 0,
+                'currency' => 'IDR',
+                'status' => 'active',
+            ]);
+
+            if ($role === 'mentor') {
+                MentorProfile::create([
+                    'user_id' => $user->id,
+                    'display_name' => $user->name,
+                    'slug' => $this->uniqueMentorSlug($user->name),
+                    'status' => 'active',
+                ]);
+            }
+
+            return $user;
+        });
+
+        event(new Registered($user));
 
         Auth::login($user);
 
         $this->redirect(route('dashboard', absolute: false), navigate: true);
+    }
+
+    private function uniqueMentorSlug(string $name): string
+    {
+        $baseSlug = Str::slug($name) ?: 'mentor';
+        $slug = $baseSlug;
+        $suffix = 2;
+
+        while (MentorProfile::where('slug', $slug)->exists()) {
+            $slug = $baseSlug.'-'.$suffix;
+            $suffix++;
+        }
+
+        return $slug;
     }
 }; ?>
 
@@ -50,6 +100,16 @@ new #[Layout('layouts.guest')] class extends Component
             <x-input-label for="email" :value="__('Email')" />
             <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        </div>
+
+        <!-- Role -->
+        <div class="mt-4">
+            <x-input-label for="role" :value="__('Register as')" />
+            <select wire:model="role" id="role" name="role" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
+                <option value="user">{{ __('Student / User') }}</option>
+                <option value="mentor">{{ __('Mentor') }}</option>
+            </select>
+            <x-input-error :messages="$errors->get('role')" class="mt-2" />
         </div>
 
         <!-- Password -->

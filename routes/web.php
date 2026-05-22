@@ -5,11 +5,11 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'welcome');
 
 Route::view('dashboard', 'dashboard')
-    ->middleware(['auth'])
+    ->middleware(['auth', 'active.user'])
     ->name('dashboard');
 
 Route::view('profile', 'profile')
-    ->middleware(['auth'])
+    ->middleware(['auth', 'active.user'])
     ->name('profile');
 
 require __DIR__.'/auth.php';

@@ -8,6 +8,7 @@ use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -65,6 +66,11 @@ class User extends Authenticatable implements FilamentUser
     public function wallet(): HasOne
     {
         return $this->hasOne(Wallet::class, 'owner_id')->where('owner_type', 'user');
+    }
+
+    public function courses(): HasMany
+    {
+        return $this->hasMany(Course::class, 'mentor_id');
     }
 
     public function canAccessPanel(Panel $panel): bool

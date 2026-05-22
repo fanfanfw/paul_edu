@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             PlatformSettingSeeder::class,
             PlatformWalletSeeder::class,
             UserSeeder::class,
+            CourseCategorySeeder::class,
+            DemoCourseSeeder::class,
         ]);
     }
 }

@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Models;
+
+use App\Enums\CourseStatus;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Course extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $fillable = [
+        'mentor_id',
+        'category_id',
+        'title',
+        'slug',
+        'short_description',
+        'description',
+        'price',
+        'thumbnail_path',
+        'status',
+        'published_at',
+        'archived_at',
+        'deleted_by_mentor_at',
+        'hidden_by_admin_at',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'price' => 'integer',
+            'status' => CourseStatus::class,
+            'published_at' => 'datetime',
+            'archived_at' => 'datetime',
+            'deleted_by_mentor_at' => 'datetime',
+            'hidden_by_admin_at' => 'datetime',
+        ];
+    }
+
+    public function mentor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'mentor_id');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(CourseCategory::class, 'category_id');
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->status === CourseStatus::Published;
+    }
+}

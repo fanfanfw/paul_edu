@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Enums\CourseStatus;
 use App\Models\Course;
 use App\Models\CourseCategory;
+use App\Models\CourseLesson;
+use App\Models\CourseSection;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -12,7 +14,7 @@ use Illuminate\Support\Str;
 class DemoCourseSeeder extends Seeder
 {
     /**
-     * Seed published demo courses without materials.
+     * Seed published demo courses with lightweight section and lesson metadata.
      */
     public function run(): void
     {
@@ -53,7 +55,7 @@ class DemoCourseSeeder extends Seeder
                 continue;
             }
 
-            Course::updateOrCreate(
+            $demoCourse = Course::updateOrCreate(
                 ['slug' => Str::slug($course['title'])],
                 [
                     'mentor_id' => $mentor->id,
@@ -64,6 +66,24 @@ class DemoCourseSeeder extends Seeder
                     'price' => $course['price'],
                     'status' => CourseStatus::Published,
                     'published_at' => now(),
+                ]
+            );
+
+            $section = CourseSection::updateOrCreate(
+                ['course_id' => $demoCourse->id, 'title' => 'Mulai belajar'],
+                [
+                    'description' => 'Section pembuka untuk memahami alur kelas.',
+                    'sort_order' => 0,
+                ]
+            );
+
+            CourseLesson::updateOrCreate(
+                ['course_id' => $demoCourse->id, 'title' => 'Pengenalan kelas'],
+                [
+                    'section_id' => $section->id,
+                    'description' => 'Lesson metadata demo tanpa file besar.',
+                    'sort_order' => 0,
+                    'is_preview' => true,
                 ]
             );
         }

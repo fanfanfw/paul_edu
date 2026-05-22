@@ -34,6 +34,9 @@ Route::middleware(['auth', 'active.user', 'role:mentor'])
 
         Volt::route('courses/{course}/edit', 'pages.mentor.course-form')
             ->name('courses.edit');
+
+        Volt::route('courses/{course}/materials', 'pages.mentor.course-material-manager')
+            ->name('courses.materials');
     });
 
 require __DIR__.'/auth.php';

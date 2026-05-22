@@ -57,6 +57,7 @@ new #[Layout('layouts.app')] class extends Component
                             </div>
                             <div class="flex flex-wrap gap-2">
                                 <a href="{{ route('mentor.courses.edit', $course) }}" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" wire:navigate>Edit</a>
+                                <a href="{{ route('mentor.courses.materials', $course) }}" class="rounded-lg border border-indigo-200 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50" wire:navigate>Materi</a>
                                 @if ($course->status->value !== 'deleted_by_mentor')
                                     <button type="button" wire:click="markDeleted({{ $course->id }})" wire:confirm="Tandai kelas ini sebagai dihapus?" class="rounded-lg border border-rose-200 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50">Hapus</button>
                                 @endif

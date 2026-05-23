@@ -68,7 +68,7 @@ npm install
 npm run build
 ```
 
-The app is served by Nginx on port `8080` by default. PostgreSQL is published on `5432`; if local PostgreSQL already uses that port, adjust the host port in `docker-compose.yml`.
+The app is served by Nginx on port `8081` by default. PostgreSQL and Redis are only exposed inside the Docker network as `postgres:5432` and `redis:6379`, so they do not conflict with local services on the host.
 
 ## Demo Accounts
 

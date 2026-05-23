@@ -14,6 +14,11 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                slate: {
+                    650: 'oklch(0.42 0.035 255)',
+                },
+            },
         },
     },
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CourseMaterialViewerController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -12,7 +13,7 @@ Volt::route('courses', 'pages.public.course-catalog')
 Volt::route('courses/{course:slug}', 'pages.public.course-detail')
     ->name('courses.show');
 
-Route::view('dashboard', 'dashboard')
+Route::get('dashboard', DashboardController::class)
     ->middleware(['auth', 'active.user'])
     ->name('dashboard');
 

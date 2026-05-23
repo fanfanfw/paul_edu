@@ -42,7 +42,7 @@ new class extends Component
                             {{ __('Katalog') }}
                         </x-nav-link>
                         <x-nav-link :href="route('student.courses')" :active="request()->routeIs('student.courses')" wire:navigate>
-                            {{ __('Kelas Saya') }}
+                            {{ __('Kelas saya') }}
                         </x-nav-link>
                         <x-nav-link :href="route('wallet')" :active="request()->routeIs('wallet')" wire:navigate>
                             {{ __('Wallet') }}
@@ -125,7 +125,7 @@ new class extends Component
                     {{ __('Katalog') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('student.courses')" :active="request()->routeIs('student.courses')" wire:navigate>
-                    {{ __('Kelas Saya') }}
+                    {{ __('Kelas saya') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('wallet')" :active="request()->routeIs('wallet')" wire:navigate>
                     {{ __('Wallet') }}

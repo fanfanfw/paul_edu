@@ -33,18 +33,38 @@ new class extends Component
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('courses.index')" :active="request()->routeIs('courses.*')" wire:navigate>
-                        {{ __('Katalog') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('student.courses')" :active="request()->routeIs('student.courses')" wire:navigate>
-                        {{ __('Kelas Saya') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('wallet')" :active="request()->routeIs('wallet')" wire:navigate>
-                        {{ __('Wallet') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('transactions')" :active="request()->routeIs('transactions')" wire:navigate>
-                        {{ __('Transaksi') }}
-                    </x-nav-link>
+                    @if (auth()->user()->hasRole('admin'))
+                        <x-nav-link :href="url('/admin')" :active="request()->is('admin*')">
+                            {{ __('Admin Panel') }}
+                        </x-nav-link>
+                    @else
+                        <x-nav-link :href="route('courses.index')" :active="request()->routeIs('courses.*')" wire:navigate>
+                            {{ __('Katalog') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('student.courses')" :active="request()->routeIs('student.courses')" wire:navigate>
+                            {{ __('Kelas Saya') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('wallet')" :active="request()->routeIs('wallet')" wire:navigate>
+                            {{ __('Wallet') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('transactions')" :active="request()->routeIs('transactions')" wire:navigate>
+                            {{ __('Transaksi') }}
+                        </x-nav-link>
+                        @if (auth()->user()->hasRole('mentor'))
+                            <x-nav-link :href="route('mentor.dashboard')" :active="request()->routeIs('mentor.dashboard')" wire:navigate>
+                                {{ __('Mentor Dashboard') }}
+                            </x-nav-link>
+                            <x-nav-link :href="route('mentor.courses.index')" :active="request()->routeIs('mentor.courses.*')" wire:navigate>
+                                {{ __('Kelas Mentor') }}
+                            </x-nav-link>
+                            <x-nav-link :href="route('mentor.wallet')" :active="request()->routeIs('mentor.wallet')" wire:navigate>
+                                {{ __('Mentor Wallet') }}
+                            </x-nav-link>
+                            <x-nav-link :href="route('mentor.sales')" :active="request()->routeIs('mentor.sales')" wire:navigate>
+                                {{ __('Sales') }}
+                            </x-nav-link>
+                        @endif
+                    @endif
                 </div>
             </div>
 
@@ -96,18 +116,38 @@ new class extends Component
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('courses.index')" :active="request()->routeIs('courses.*')" wire:navigate>
-                {{ __('Katalog') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('student.courses')" :active="request()->routeIs('student.courses')" wire:navigate>
-                {{ __('Kelas Saya') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('wallet')" :active="request()->routeIs('wallet')" wire:navigate>
-                {{ __('Wallet') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('transactions')" :active="request()->routeIs('transactions')" wire:navigate>
-                {{ __('Transaksi') }}
-            </x-responsive-nav-link>
+            @if (auth()->user()->hasRole('admin'))
+                <x-responsive-nav-link :href="url('/admin')" :active="request()->is('admin*')">
+                    {{ __('Admin Panel') }}
+                </x-responsive-nav-link>
+            @else
+                <x-responsive-nav-link :href="route('courses.index')" :active="request()->routeIs('courses.*')" wire:navigate>
+                    {{ __('Katalog') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('student.courses')" :active="request()->routeIs('student.courses')" wire:navigate>
+                    {{ __('Kelas Saya') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('wallet')" :active="request()->routeIs('wallet')" wire:navigate>
+                    {{ __('Wallet') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('transactions')" :active="request()->routeIs('transactions')" wire:navigate>
+                    {{ __('Transaksi') }}
+                </x-responsive-nav-link>
+                @if (auth()->user()->hasRole('mentor'))
+                    <x-responsive-nav-link :href="route('mentor.dashboard')" :active="request()->routeIs('mentor.dashboard')" wire:navigate>
+                        {{ __('Mentor Dashboard') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('mentor.courses.index')" :active="request()->routeIs('mentor.courses.*')" wire:navigate>
+                        {{ __('Kelas Mentor') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('mentor.wallet')" :active="request()->routeIs('mentor.wallet')" wire:navigate>
+                        {{ __('Mentor Wallet') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('mentor.sales')" :active="request()->routeIs('mentor.sales')" wire:navigate>
+                        {{ __('Sales') }}
+                    </x-responsive-nav-link>
+                @endif
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

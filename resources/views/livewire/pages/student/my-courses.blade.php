@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\CourseStatus;
+use App\Enums\EnrollmentStatus;
 use App\Models\Enrollment;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -12,6 +13,7 @@ new #[Layout('layouts.app')] class extends Component
         return [
             'enrollments' => Enrollment::with(['course.mentor', 'course.category'])
                 ->where('user_id', auth()->id())
+                ->where('status', EnrollmentStatus::Active)
                 ->latest('enrolled_at')
                 ->get(),
         ];

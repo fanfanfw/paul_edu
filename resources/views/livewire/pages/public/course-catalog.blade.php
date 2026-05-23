@@ -15,6 +15,8 @@ new #[Layout('layouts.guest')] class extends Component
     public function with(): array
     {
         $courses = Course::with(['mentor', 'category'])
+            ->withAvg(['reviews as published_reviews_avg_rating' => fn ($query) => $query->where('is_published', true)], 'rating')
+            ->withCount(['reviews as published_reviews_count' => fn ($query) => $query->where('is_published', true)])
             ->where('status', CourseStatus::Published)
             ->when($this->search !== '', fn ($query) => $query->where('title', 'like', '%'.$this->search.'%'))
             ->when($this->category !== '', fn ($query) => $query->where('category_id', $this->category))
@@ -49,7 +51,7 @@ new #[Layout('layouts.guest')] class extends Component
         <div class="max-w-3xl">
             <p class="text-sm font-semibold uppercase tracking-wide text-indigo-600">Catalog</p>
             <h1 class="mt-2 text-3xl font-bold text-slate-900">Jelajahi kelas digital</h1>
-            <p class="mt-3 text-slate-600">Tahap ini menampilkan kelas published. Pembelian dan akses materi akan tersedia pada tahap berikutnya.</p>
+            <p class="mt-3 text-slate-600">Jelajahi kelas published, lihat rating peserta, lalu mulai belajar setelah enroll atau membeli kelas.</p>
         </div>
 
         <div class="mt-8 grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-3">
@@ -95,7 +97,14 @@ new #[Layout('layouts.guest')] class extends Component
                             </div>
                             <h2 class="mt-4 text-lg font-bold text-slate-900 group-hover:text-indigo-700">{{ $course->title }}</h2>
                             <p class="mt-2 line-clamp-2 text-sm text-slate-600">{{ $course->short_description }}</p>
-                            <p class="mt-4 text-sm font-medium text-slate-500">Mentor: {{ $course->mentor?->name }}</p>
+                            <div class="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm">
+                                <p class="font-medium text-slate-500">Mentor: {{ $course->mentor?->name }}</p>
+                                @if ($course->published_reviews_count > 0)
+                                    <span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">{{ number_format($course->published_reviews_avg_rating, 1) }}/5 · {{ $course->published_reviews_count }} review</span>
+                                @else
+                                    <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">Belum ada rating</span>
+                                @endif
+                            </div>
                         </div>
                     </a>
                 @endforeach

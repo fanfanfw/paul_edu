@@ -1,59 +1,148 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Skill Digital Marketplace MVP
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel 12 marketplace kelas digital untuk mentor dan user. Mentor dapat membuat kelas, mengelola section/lesson/material private, dan menerima pendapatan dummy. User dapat topup saldo dummy, membeli/enroll kelas, mengakses materi melalui protected route, dan memberi review. Admin melakukan monitoring dan moderation melalui Filament.
 
-## About Laravel
+## Tech Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Laravel 12
+- Blade + Livewire + Volt
+- Filament v4 admin panel
+- Spatie Laravel Permission
+- PostgreSQL
+- Redis optional for cache/queue support
+- Tailwind CSS and Vite
+- Docker Compose with PHP-FPM, Nginx, PostgreSQL, Redis, queue worker, scheduler
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Local Setup
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+npm install
+php artisan migrate --seed
+npm run build
+php artisan serve
+```
 
-## Learning Laravel
+Run tests:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```bash
+php artisan test
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+If running migrations from the host against Docker PostgreSQL, use a host-reachable database host:
 
-## Laravel Sponsors
+```env
+DB_HOST=127.0.0.1
+DB_PORT=5432
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Inside Docker, `DB_HOST=postgres` is correct because the hostname resolves on the Compose network.
 
-### Premium Partners
+## Docker Setup
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Validate Compose config:
 
-## Contributing
+```bash
+docker compose config
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Start services:
 
-## Code of Conduct
+```bash
+docker compose up -d --build
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Run app commands in the app container:
 
-## Security Vulnerabilities
+```bash
+docker compose exec app php artisan migrate --seed
+docker compose exec app php artisan test
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Build frontend assets on the host machine, because the current PHP app image does not install Node or NPM:
 
-## License
+```bash
+npm install
+npm run build
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+The app is served by Nginx on port `8080` by default. PostgreSQL is published on `5432`; if local PostgreSQL already uses that port, adjust the host port in `docker-compose.yml`.
+
+## Demo Accounts
+
+Seeded accounts use password `password`.
+
+- Admin: `admin@example.com`
+- Mentor: `mentor@example.com`
+- User: `user@example.com`
+
+Seeders create roles/permissions, platform setting, platform wallet, demo users, categories, demo courses, course section/lesson metadata, and a tiny private demo PDF material for the free demo course. Seeders are intended to be idempotent.
+
+## Key Routes
+
+- `/` landing page
+- `/courses` public catalog
+- `/courses/{course:slug}` public course detail
+- `/dashboard` role-aware dashboard
+- `/my-courses` enrolled courses
+- `/wallet` dummy wallet topup
+- `/transactions` wallet ledger history
+- `/learn/{course:slug}` learning page for active enrollments
+- `/materials/{material}/view` protected private material viewer
+- `/mentor/dashboard` mentor dashboard
+- `/mentor/courses` mentor course management
+- `/mentor/courses/{course}/materials` mentor material manager
+- `/mentor/wallet` mentor wallet income view
+- `/mentor/sales` mentor sales list
+- `/admin` Filament admin panel
+
+## Dummy Wallet Rules
+
+- Topup is dummy and succeeds immediately.
+- There is no real payment gateway.
+- There is no payout flow.
+- There is no refund flow.
+- Wallet balances must be changed through `WalletService`.
+- Wallet ledger rows store before/after balances and are treated as immutable in app flow.
+- Platform wallet uses `owner_type = platform` and `owner_id = 0`.
+- Human users and mentors use `owner_type = user`.
+
+## Course Purchase And Commission
+
+- Free courses create an order with total `0` and active enrollment.
+- Paid courses debit buyer wallet and credit mentor/platform wallets atomically.
+- Mentor commission is controlled by platform setting `mentor_commission_rate`.
+- Existing orders keep price and commission snapshots even if course price or commission changes later.
+
+## Private Material Storage
+
+- Course material files are stored on `Storage::disk('course_materials')`.
+- Material files are not stored on the public disk.
+- Material files are not exposed through public storage URLs.
+- Access uses the protected `/materials/{material}/view` route and active enrollment checks.
+- This protects direct public access but is not DRM and cannot prevent screen recording or browser-level copying.
+
+## Admin Panel
+
+Filament resources include monitoring and moderation for:
+
+- Courses
+- Course categories
+- Orders
+- Wallets
+- Wallet transactions
+- Course reviews
+- Platform setting `mentor_commission_rate`
+
+Admin dashboard includes lightweight platform stats. No payout, refund, bank account, voucher, subscription, affiliate, certificate, quiz, chat, or detailed progress tracking exists in this MVP.
+
+## Verification Commands
+
+```bash
+php artisan test
+DB_CONNECTION=sqlite DB_DATABASE=:memory: php artisan migrate:fresh --seed --force
+npm run build
+docker compose config
+```

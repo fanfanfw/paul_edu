@@ -24,6 +24,7 @@ new #[Layout('layouts.guest')] class extends Component
             'sections' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
             'sections.lessons' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
             'sections.lessons.materials' => fn ($query) => $query->where('status', 'active')->orderBy('sort_order')->orderBy('id'),
+            'publishedReviews.user',
         ]);
     }
 
@@ -60,8 +61,12 @@ new #[Layout('layouts.guest')] class extends Component
                 ->first()
             : null;
 
+        $publishedReviews = $this->course->publishedReviews;
+
         return [
             'isEnrolled' => $enrollment !== null,
+            'reviewCount' => $publishedReviews->count(),
+            'averageRating' => $publishedReviews->count() > 0 ? round($publishedReviews->avg('rating'), 1) : null,
         ];
     }
 }; ?>
@@ -86,6 +91,14 @@ new #[Layout('layouts.guest')] class extends Component
             <span class="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">{{ $course->category?->name }}</span>
             <h1 class="mt-4 text-3xl font-bold text-slate-900">{{ $course->title }}</h1>
             <p class="mt-3 text-sm font-medium text-slate-500">Mentor: {{ $course->mentor?->name }}</p>
+            <div class="mt-4 flex flex-wrap items-center gap-3 text-sm">
+                @if ($averageRating)
+                    <span class="rounded-full bg-amber-50 px-3 py-1 font-semibold text-amber-700">Rating {{ number_format($averageRating, 1) }}/5</span>
+                    <span class="text-slate-500">{{ $reviewCount }} review</span>
+                @else
+                    <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-600">Belum ada rating</span>
+                @endif
+            </div>
             <p class="mt-6 text-base leading-7 text-slate-700">{{ $course->description ?: $course->short_description }}</p>
 
             <div class="mt-8 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5">
@@ -114,6 +127,25 @@ new #[Layout('layouts.guest')] class extends Component
                                     @endforelse
                                 </div>
                             </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            <div class="mt-8 rounded-2xl border border-slate-200 bg-white p-5">
+                <h2 class="font-semibold text-slate-900">Review peserta</h2>
+                @if ($course->publishedReviews->isEmpty())
+                    <p class="mt-2 text-sm text-slate-600">Belum ada review yang dipublikasikan.</p>
+                @else
+                    <div class="mt-4 space-y-4">
+                        @foreach ($course->publishedReviews as $review)
+                            <article class="rounded-xl bg-slate-50 p-4">
+                                <div class="flex flex-wrap items-center justify-between gap-3">
+                                    <p class="font-semibold text-slate-900">{{ $review->user?->name }}</p>
+                                    <span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">{{ $review->rating }}/5</span>
+                                </div>
+                                <p class="mt-2 text-sm text-slate-600">{{ $review->comment }}</p>
+                            </article>
                         @endforeach
                     </div>
                 @endif

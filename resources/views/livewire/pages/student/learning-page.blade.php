@@ -5,7 +5,10 @@ use App\Enums\EnrollmentStatus;
 use App\Enums\MaterialType;
 use App\Models\Course;
 use App\Models\CourseMaterial;
+use App\Models\CourseReview;
 use App\Models\Enrollment;
+use App\Services\CourseReviewService;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
@@ -13,6 +16,8 @@ new #[Layout('layouts.app')] class extends Component
 {
     public Course $course;
     public ?int $selectedMaterialId = null;
+    public int $reviewRating = 5;
+    public string $reviewComment = '';
 
     public function mount(Course $course): void
     {
@@ -25,6 +30,13 @@ new #[Layout('layouts.app')] class extends Component
             ->orderBy('sort_order')
             ->orderBy('id')
             ->value('id');
+
+        $review = CourseReview::where('user_id', auth()->id())->where('course_id', $course->id)->first();
+
+        if ($review) {
+            $this->reviewRating = $review->rating;
+            $this->reviewComment = $review->comment;
+        }
     }
 
     public function selectMaterial(int $materialId): void
@@ -32,6 +44,30 @@ new #[Layout('layouts.app')] class extends Component
         abort_unless(CourseMaterial::where('course_id', $this->course->id)->where('status', 'active')->whereKey($materialId)->exists(), 404);
 
         $this->selectedMaterialId = $materialId;
+    }
+
+    public function saveReview(CourseReviewService $reviewService): void
+    {
+        $validated = $this->validate([
+            'reviewRating' => ['required', 'integer', 'min:1', 'max:5'],
+            'reviewComment' => ['required', 'string', 'min:10', 'max:2000'],
+        ]);
+
+        $review = CourseReview::where('user_id', auth()->id())->where('course_id', $this->course->id)->first();
+
+        try {
+            if ($review) {
+                $reviewService->update(auth()->user(), $review, (int) $validated['reviewRating'], $validated['reviewComment']);
+            } else {
+                $reviewService->create(auth()->user(), $this->course->fresh(), (int) $validated['reviewRating'], $validated['reviewComment']);
+            }
+        } catch (ValidationException $exception) {
+            $this->addError('review', collect($exception->errors())->flatten()->first() ?: 'Review gagal disimpan.');
+
+            return;
+        }
+
+        session()->flash('review_status', 'Review berhasil disimpan.');
     }
 
     public function with(): array
@@ -47,6 +83,7 @@ new #[Layout('layouts.app')] class extends Component
         return [
             'courseWithContent' => $course,
             'selectedMaterial' => $this->selectedMaterialId ? CourseMaterial::where('course_id', $course->id)->where('status', 'active')->find($this->selectedMaterialId) : null,
+            'currentReview' => CourseReview::where('user_id', auth()->id())->where('course_id', $course->id)->first(),
         ];
     }
 
@@ -134,5 +171,50 @@ new #[Layout('layouts.app')] class extends Component
                 </div>
             @endif
         </main>
+
+        <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-start-2">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Review kelas</h2>
+                    <p class="mt-1 text-sm text-slate-600">Bagikan pengalaman belajar Anda untuk membantu calon peserta lain.</p>
+                </div>
+                @if ($currentReview)
+                    <span class="w-fit rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Sudah direview</span>
+                @endif
+            </div>
+
+            @if (session('review_status'))
+                <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-700">{{ session('review_status') }}</div>
+            @endif
+
+            @if ($currentReview)
+                <div class="mt-5 rounded-xl bg-slate-50 p-4">
+                    <p class="text-sm font-semibold text-slate-900">Review Anda saat ini: {{ $currentReview->rating }}/5</p>
+                    <p class="mt-2 text-sm text-slate-600">{{ $currentReview->comment }}</p>
+                    @if ($currentReview->edited_at)
+                        <p class="mt-2 text-xs text-slate-500">Diedit {{ $currentReview->edited_at->format('d M Y H:i') }}</p>
+                    @endif
+                </div>
+            @endif
+
+            <form wire:submit="saveReview" class="mt-5 space-y-4">
+                <div>
+                    <x-input-label for="reviewRating" value="Rating" />
+                    <select wire:model="reviewRating" id="reviewRating" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        @foreach ([5, 4, 3, 2, 1] as $rating)
+                            <option value="{{ $rating }}">{{ $rating }} / 5</option>
+                        @endforeach
+                    </select>
+                    <x-input-error :messages="$errors->get('reviewRating')" class="mt-2" />
+                </div>
+                <div>
+                    <x-input-label for="reviewComment" value="Komentar" />
+                    <textarea wire:model="reviewComment" id="reviewComment" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Minimal 10 karakter"></textarea>
+                    <x-input-error :messages="$errors->get('reviewComment')" class="mt-2" />
+                    <x-input-error :messages="$errors->get('review')" class="mt-2" />
+                </div>
+                <x-primary-button>{{ $currentReview ? 'Update review' : 'Kirim review' }}</x-primary-button>
+            </form>
+        </section>
     </div>
 </div>

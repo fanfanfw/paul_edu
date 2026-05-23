@@ -76,6 +76,16 @@ class Course extends Model
         return $this->hasMany(Enrollment::class);
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(CourseReview::class);
+    }
+
+    public function publishedReviews(): HasMany
+    {
+        return $this->reviews()->where('is_published', true);
+    }
+
     public function isPublished(): bool
     {
         return $this->status === CourseStatus::Published;

@@ -83,6 +83,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Enrollment::class);
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(CourseReview::class);
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->status === UserStatus::Active

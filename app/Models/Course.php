@@ -66,6 +66,16 @@ class Course extends Model
         return $this->hasMany(CourseMaterial::class);
     }
 
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
     public function isPublished(): bool
     {
         return $this->status === CourseStatus::Published;

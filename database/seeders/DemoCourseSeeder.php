@@ -3,12 +3,15 @@
 namespace Database\Seeders;
 
 use App\Enums\CourseStatus;
+use App\Enums\MaterialType;
 use App\Models\Course;
 use App\Models\CourseCategory;
 use App\Models\CourseLesson;
+use App\Models\CourseMaterial;
 use App\Models\CourseSection;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class DemoCourseSeeder extends Seeder
@@ -77,7 +80,7 @@ class DemoCourseSeeder extends Seeder
                 ]
             );
 
-            CourseLesson::updateOrCreate(
+            $lesson = CourseLesson::updateOrCreate(
                 ['course_id' => $demoCourse->id, 'title' => 'Pengenalan kelas'],
                 [
                     'section_id' => $section->id,
@@ -86,6 +89,26 @@ class DemoCourseSeeder extends Seeder
                     'is_preview' => true,
                 ]
             );
+
+            if ((int) $demoCourse->price === 0) {
+                $path = 'demo/course-'.$demoCourse->id.'/intro.pdf';
+
+                Storage::disk('course_materials')->put($path, "%PDF-1.4\n% Tiny demo PDF placeholder\n");
+
+                CourseMaterial::updateOrCreate(
+                    ['course_id' => $demoCourse->id, 'lesson_id' => $lesson->id, 'title' => 'Panduan demo PDF'],
+                    [
+                        'description' => 'File PDF kecil untuk demo protected material route.',
+                        'type' => MaterialType::Pdf,
+                        'file_path' => $path,
+                        'original_filename' => 'intro.pdf',
+                        'mime_type' => 'application/pdf',
+                        'file_size' => Storage::disk('course_materials')->size($path),
+                        'sort_order' => 0,
+                        'status' => 'active',
+                    ]
+                );
+            }
         }
     }
 }

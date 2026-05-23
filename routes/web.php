@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CourseMaterialViewerController;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -18,6 +19,17 @@ Route::view('dashboard', 'dashboard')
 Route::view('profile', 'profile')
     ->middleware(['auth', 'active.user'])
     ->name('profile');
+
+Route::middleware(['auth', 'active.user'])->group(function (): void {
+    Volt::route('my-courses', 'pages.student.my-courses')
+        ->name('student.courses');
+
+    Volt::route('learn/{course:slug}', 'pages.student.learning-page')
+        ->name('student.learn');
+
+    Route::get('materials/{material}/view', [CourseMaterialViewerController::class, 'show'])
+        ->name('materials.view');
+});
 
 Route::middleware(['auth', 'active.user', 'role:mentor'])
     ->prefix('mentor')

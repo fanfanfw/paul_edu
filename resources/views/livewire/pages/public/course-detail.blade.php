@@ -1,7 +1,10 @@
 <?php
 
 use App\Enums\CourseStatus;
+use App\Enums\EnrollmentStatus;
 use App\Models\Course;
+use App\Models\Enrollment;
+use App\Services\FreeEnrollmentService;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
@@ -13,7 +16,36 @@ new #[Layout('layouts.guest')] class extends Component
     {
         abort_unless($course->status === CourseStatus::Published, 404);
 
-        $this->course = $course->load(['mentor', 'category']);
+        $this->course = $course->load([
+            'mentor',
+            'category',
+            'sections' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+            'sections.lessons' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+            'sections.lessons.materials' => fn ($query) => $query->where('status', 'active')->orderBy('sort_order')->orderBy('id'),
+        ]);
+    }
+
+    public function enrollFree(FreeEnrollmentService $enrollmentService): void
+    {
+        abort_unless(auth()->check(), 403);
+
+        $enrollmentService->enroll(auth()->user(), $this->course->fresh());
+
+        $this->redirect(route('student.learn', $this->course), navigate: true);
+    }
+
+    public function with(): array
+    {
+        $enrollment = auth()->check()
+            ? Enrollment::where('user_id', auth()->id())
+                ->where('course_id', $this->course->id)
+                ->where('status', EnrollmentStatus::Active)
+                ->first()
+            : null;
+
+        return [
+            'isEnrolled' => $enrollment !== null,
+        ];
     }
 }; ?>
 
@@ -41,7 +73,33 @@ new #[Layout('layouts.guest')] class extends Component
 
             <div class="mt-8 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5">
                 <h2 class="font-semibold text-slate-900">Materi kelas</h2>
-                <p class="mt-2 text-sm text-slate-600">Preview kurikulum dan file materi belum tersedia pada tahap ini.</p>
+                @if ($course->sections->isEmpty())
+                    <p class="mt-2 text-sm text-slate-600">Kurikulum belum tersedia.</p>
+                @else
+                    <div class="mt-4 space-y-4">
+                        @foreach ($course->sections as $section)
+                            <div class="rounded-xl border border-slate-200 bg-white p-4">
+                                <h3 class="font-semibold text-slate-900">{{ $section->title }}</h3>
+                                <div class="mt-3 space-y-3">
+                                    @forelse ($section->lessons as $lesson)
+                                        <div>
+                                            <p class="text-sm font-medium text-slate-800">{{ $lesson->title }}</p>
+                                            @if ($lesson->materials->isNotEmpty())
+                                                <ul class="mt-2 space-y-1 text-sm text-slate-600">
+                                                    @foreach ($lesson->materials as $material)
+                                                        <li>{{ $material->title }} · {{ strtoupper($material->type->value) }}</li>
+                                                    @endforeach
+                                                </ul>
+                                            @endif
+                                        </div>
+                                    @empty
+                                        <p class="text-sm text-slate-500">Belum ada lesson.</p>
+                                    @endforelse
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
             </div>
         </section>
 
@@ -54,11 +112,15 @@ new #[Layout('layouts.guest')] class extends Component
 
             <div class="mt-5">
                 @guest
-                    <a href="{{ route('login') }}" class="block rounded-xl bg-indigo-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-indigo-700" wire:navigate>Login untuk lanjut</a>
+                    <a href="{{ route('login') }}" class="block rounded-xl bg-indigo-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-indigo-700" wire:navigate>{{ $course->price > 0 ? 'Login untuk lanjut' : 'Login untuk enroll gratis' }}</a>
                     <a href="{{ route('register') }}" class="mt-3 block rounded-xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50" wire:navigate>Daftar akun</a>
                 @else
                     @if (auth()->id() === $course->mentor_id)
                         <button type="button" disabled class="w-full rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-500">Ini kelas Anda</button>
+                    @elseif ($isEnrolled)
+                        <a href="{{ route('student.learn', $course) }}" class="block rounded-xl bg-indigo-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-indigo-700" wire:navigate>Lanjut Belajar</a>
+                    @elseif ((int) $course->price === 0)
+                        <button type="button" wire:click="enrollFree" class="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700">Enroll Gratis</button>
                     @else
                         <button type="button" disabled class="w-full rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-500">Pembelian akan tersedia di tahap berikutnya</button>
                     @endif

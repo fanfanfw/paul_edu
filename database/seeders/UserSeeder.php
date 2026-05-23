@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
+    private const DEMO_PASSWORD = 'Scr@pper';
+
     /**
      * Seed demo identity users.
      */
@@ -20,7 +22,7 @@ class UserSeeder extends Seeder
             ['email' => 'admin@example.com'],
             [
                 'name' => 'Admin',
-                'password' => Hash::make('password'),
+                'password' => Hash::make(self::DEMO_PASSWORD),
                 'status' => UserStatus::Active,
             ]
         );
@@ -30,7 +32,7 @@ class UserSeeder extends Seeder
             ['email' => 'mentor@example.com'],
             [
                 'name' => 'Mentor Demo',
-                'password' => Hash::make('password'),
+                'password' => Hash::make(self::DEMO_PASSWORD),
                 'status' => UserStatus::Active,
             ]
         );
@@ -54,7 +56,7 @@ class UserSeeder extends Seeder
             ['email' => 'user@example.com'],
             [
                 'name' => 'User Demo',
-                'password' => Hash::make('password'),
+                'password' => Hash::make(self::DEMO_PASSWORD),
                 'status' => UserStatus::Active,
             ]
         );

@@ -6,6 +6,7 @@ use App\Models\PlatformSetting;
 use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -51,6 +52,9 @@ class SeederTest extends TestCase
         $this->assertTrue($admin->hasRole('admin'));
         $this->assertTrue($mentor->hasRole('mentor'));
         $this->assertTrue($user->hasRole('user'));
+        $this->assertTrue(Hash::check('Scr@pper', $admin->password));
+        $this->assertTrue(Hash::check('Scr@pper', $mentor->password));
+        $this->assertTrue(Hash::check('Scr@pper', $user->password));
 
         $this->assertTrue(Role::findByName('admin')->hasPermissionTo('access_admin_panel'));
         $this->assertTrue(Permission::where('name', 'buy_course')->exists());

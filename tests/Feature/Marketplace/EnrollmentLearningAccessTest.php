@@ -20,7 +20,6 @@ use Database\Seeders\CourseCategorySeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Volt\Volt;
@@ -88,7 +87,7 @@ class EnrollmentLearningAccessTest extends TestCase
         app(FreeEnrollmentService::class)->enroll($this->user, $course);
 
         $this->assertSame(123456, $wallet->refresh()->balance);
-        $this->assertFalse(Schema::hasTable('wallet_transactions'));
+        $this->assertDatabaseCount('wallet_transactions', 0);
     }
 
     public function test_user_cannot_enroll_non_free_course_through_free_enrollment_service(): void

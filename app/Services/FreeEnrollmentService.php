@@ -68,6 +68,10 @@ class FreeEnrollmentService
             throw ValidationException::withMessages(['course' => 'Akun tidak aktif.']);
         }
 
+        if ($user->hasRole('admin') || ! $user->hasAnyRole(['user', 'mentor'])) {
+            throw ValidationException::withMessages(['course' => 'Role ini tidak dapat enroll kelas.']);
+        }
+
         if ($course->status !== CourseStatus::Published) {
             throw ValidationException::withMessages(['course' => 'Kelas belum tersedia untuk enrollment.']);
         }

@@ -4,7 +4,9 @@ use App\Enums\CourseStatus;
 use App\Enums\EnrollmentStatus;
 use App\Models\Course;
 use App\Models\Enrollment;
+use App\Services\CoursePurchaseService;
 use App\Services\FreeEnrollmentService;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
@@ -30,6 +32,21 @@ new #[Layout('layouts.guest')] class extends Component
         abort_unless(auth()->check(), 403);
 
         $enrollmentService->enroll(auth()->user(), $this->course->fresh());
+
+        $this->redirect(route('student.learn', $this->course), navigate: true);
+    }
+
+    public function purchase(CoursePurchaseService $purchaseService): void
+    {
+        abort_unless(auth()->check(), 403);
+
+        try {
+            $purchaseService->purchase(auth()->user(), $this->course->fresh());
+        } catch (ValidationException $exception) {
+            $this->addError('purchase', collect($exception->errors())->flatten()->first() ?: 'Pembelian gagal.');
+
+            return;
+        }
 
         $this->redirect(route('student.learn', $this->course), navigate: true);
     }
@@ -115,14 +132,17 @@ new #[Layout('layouts.guest')] class extends Component
                     <a href="{{ route('login') }}" class="block rounded-xl bg-indigo-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-indigo-700" wire:navigate>{{ $course->price > 0 ? 'Login untuk lanjut' : 'Login untuk enroll gratis' }}</a>
                     <a href="{{ route('register') }}" class="mt-3 block rounded-xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50" wire:navigate>Daftar akun</a>
                 @else
-                    @if (auth()->id() === $course->mentor_id)
+                    @if (auth()->user()->hasRole('admin'))
+                        <button type="button" disabled class="w-full rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-500">Admin tidak dapat membeli kelas</button>
+                    @elseif (auth()->id() === $course->mentor_id)
                         <button type="button" disabled class="w-full rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-500">Ini kelas Anda</button>
                     @elseif ($isEnrolled)
                         <a href="{{ route('student.learn', $course) }}" class="block rounded-xl bg-indigo-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-indigo-700" wire:navigate>Lanjut Belajar</a>
                     @elseif ((int) $course->price === 0)
                         <button type="button" wire:click="enrollFree" class="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700">Enroll Gratis</button>
                     @else
-                        <button type="button" disabled class="w-full rounded-xl bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-500">Pembelian akan tersedia di tahap berikutnya</button>
+                        <button type="button" wire:click="purchase" class="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700">Beli Kelas</button>
+                        <x-input-error :messages="$errors->get('purchase')" class="mt-3" />
                     @endif
                 @endguest
             </div>

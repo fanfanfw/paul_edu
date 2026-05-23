@@ -33,6 +33,18 @@ new class extends Component
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('courses.index')" :active="request()->routeIs('courses.*')" wire:navigate>
+                        {{ __('Katalog') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('student.courses')" :active="request()->routeIs('student.courses')" wire:navigate>
+                        {{ __('Kelas Saya') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('wallet')" :active="request()->routeIs('wallet')" wire:navigate>
+                        {{ __('Wallet') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('transactions')" :active="request()->routeIs('transactions')" wire:navigate>
+                        {{ __('Transaksi') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -83,6 +95,18 @@ new class extends Component
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('courses.index')" :active="request()->routeIs('courses.*')" wire:navigate>
+                {{ __('Katalog') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('student.courses')" :active="request()->routeIs('student.courses')" wire:navigate>
+                {{ __('Kelas Saya') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('wallet')" :active="request()->routeIs('wallet')" wire:navigate>
+                {{ __('Wallet') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('transactions')" :active="request()->routeIs('transactions')" wire:navigate>
+                {{ __('Transaksi') }}
             </x-responsive-nav-link>
         </div>
 

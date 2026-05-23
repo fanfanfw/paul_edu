@@ -20,9 +20,15 @@ Route::view('profile', 'profile')
     ->middleware(['auth', 'active.user'])
     ->name('profile');
 
-Route::middleware(['auth', 'active.user'])->group(function (): void {
+Route::middleware(['auth', 'active.user', 'role:user|mentor'])->group(function (): void {
     Volt::route('my-courses', 'pages.student.my-courses')
         ->name('student.courses');
+
+    Volt::route('wallet', 'pages.student.wallet-page')
+        ->name('wallet');
+
+    Volt::route('transactions', 'pages.student.transaction-history')
+        ->name('transactions');
 
     Volt::route('learn/{course:slug}', 'pages.student.learning-page')
         ->name('student.learn');
@@ -49,6 +55,12 @@ Route::middleware(['auth', 'active.user', 'role:mentor'])
 
         Volt::route('courses/{course}/materials', 'pages.mentor.course-material-manager')
             ->name('courses.materials');
+
+        Volt::route('wallet', 'pages.mentor.wallet-page')
+            ->name('wallet');
+
+        Volt::route('sales', 'pages.mentor.sales-page')
+            ->name('sales');
     });
 
 require __DIR__.'/auth.php';
